@@ -11,4 +11,6 @@ public class Employee
     public List<ProjectEmployee> Projects { get; set; }
     public List<TaskModel> TasksInExecution { get; set; }
     public List<TaskModel> AuthoredTasks { get; set; }
+
+    public string FullName() => $"{FirstName} {LastName}";
 }

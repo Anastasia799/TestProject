@@ -9,7 +9,7 @@ public class AddEmployeeDto
 
     [Required] [MaxLength(50)] public string LastName { get; set; }
 
-    [Required] [MaxLength(50)] public string MiddleName { get; set; }
+    [MaxLength(50)] public string MiddleName { get; set; }
 
     [EmailAddress]
     [Required]

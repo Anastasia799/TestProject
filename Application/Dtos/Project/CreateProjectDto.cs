@@ -1,6 +1,4 @@
-﻿using Domain.Enums;
-
-namespace Application.Dtos.Project;
+﻿namespace Application.Dtos.Project;
 
 public class CreateProjectDto
 {
@@ -14,4 +12,6 @@ public class CreateProjectDto
     public string CustomerCompanyName { get; set; }
     
     public int ProjectManagerId { get; set; }
+    
+    public List<int> EmployeesIds { get; set; }
 }

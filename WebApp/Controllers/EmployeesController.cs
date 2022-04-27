@@ -38,6 +38,7 @@ public class EmployeesController : Controller
         }
         catch (Exception exception)
         {
+            _logger.LogError(exception, "An error occured while trying to get all employees");
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
@@ -107,7 +108,7 @@ public class EmployeesController : Controller
             var updateEmployeeDto = _mapper.Map<UpdateEmployeeDto>(editEmployeeDto);
             await _employeeService.UpdateAsync(id, updateEmployeeDto, cancellationToken);
 
-            return RedirectToAction(nameof(Details), new { id = id });
+            return RedirectToAction(nameof(Details), new { id });
         }
         catch (EmployeeNotFoundException)
         {
@@ -135,7 +136,7 @@ public class EmployeesController : Controller
         }
         catch (EmployeeNotFoundException employeeNotFoundException)
         {
-            _logger.LogWarning("Tried to get not-existing employee {employeeId}", id);
+            _logger.LogWarning("Tried to get not-existing employee {EmployeeId}", id);
             return RedirectToAction(nameof(Index));
         }
         catch (Exception exception)

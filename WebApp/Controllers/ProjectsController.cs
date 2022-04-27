@@ -1,82 +1,186 @@
-﻿using Domain.Entities;
-using Infrastructure.Database;
+﻿using Application.Dtos.Project;
+using Application.Exceptions;
+using Application.Interfaces;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
+using TestProject.ViewModels.Projects;
 
 namespace TestProject.Controllers;
 
+[Route("[controller]/[action]")]
 public class ProjectsController : Controller
 {
-    private ApplicationDbContext _dbContext;
+    private readonly IProjectService _projectService;
+    private readonly IEmployeeService _employeeService;
+    private readonly IMapper _mapper;
+    private readonly ILogger<ProjectsController> _logger;
 
-    public ProjectsController(ApplicationDbContext dbContext)
+    public ProjectsController(IProjectService projectService,
+        IEmployeeService employeeService,
+        IMapper mapper,
+        ILogger<ProjectsController> logger)
     {
-        _dbContext = dbContext;
+        _projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
+        _employeeService = employeeService ?? throw new ArgumentNullException(nameof(employeeService));
+        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    [HttpGet]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
-        var projects = await _dbContext.Projects.Include(x => x.Employees).ToListAsync();
-        return View(projects);
+        try
+        {
+            var projects = await _projectService.GetAllAsync(cancellationToken);
+            var viewModel = new ProjectIndexViewModel
+            {
+                Projects = projects
+            };
+
+            return View(viewModel);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "An error occured while trying to get all projects");
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
     }
 
-    public IActionResult Add(CancellationToken cancellationToken)
+    [HttpGet]
+    public async Task<IActionResult> Add(CancellationToken cancellationToken)
     {
-        var employees = new SelectList(_dbContext.Employees, "Id", "Name");
-        ViewBag.Employees = employees;
-        return View();
+        var employees = await _employeeService.GetAllAsync(cancellationToken);
+        var viewModel = new AddProjectViewModel
+        {
+            EmployeesListItems = employees.Select(x =>
+                    new SelectListItem(x.FullName(), x.Id.ToString()))
+                .ToList(),
+        };
+        return View(viewModel);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Add(Project? project, CancellationToken cancellationToken)
+    public async Task<IActionResult> Add(AddProjectDto? addProjectDto, CancellationToken cancellationToken)
     {
-        if (project != null)
+        try
         {
-            _dbContext.Projects.Add(project);
-            await _dbContext.SaveChangesAsync();
+            if (addProjectDto is null)
+                return RedirectToAction(nameof(Index));
+
+            if (!ModelState.IsValid)
+            {
+                var employees = await _employeeService.GetAllAsync(cancellationToken);
+                var viewModel = new AddProjectViewModel
+                {
+                    EmployeesListItems = employees.Select(x =>
+                            new SelectListItem(x.FullName(), x.Id.ToString()))
+                        .ToList(),
+                };
+                return View(viewModel);
+            }
+
+            var createProjectDto = _mapper.Map<CreateProjectDto>(addProjectDto);
+            var newProjectId = await _projectService.CreateAsync(createProjectDto, cancellationToken);
+
+            return RedirectToAction("Details", new { Id = newProjectId });
         }
-
-        return RedirectToAction("Index");
-    }
-
-    public ActionResult Edit(int id, CancellationToken cancellationToken)
-    {
-        var project = _dbContext.Projects.Find(id);
-        return View(project);
-    }
-
-
-    [HttpPost]
-    public async Task<ActionResult> Edit(Project project, CancellationToken cancellationToken)
-    {
-        var existingProject = await _dbContext.Projects.FirstOrDefaultAsync(x => x.Id == project.Id);
-        if (existingProject != null)
+        catch (Exception exception)
         {
-            existingProject.Name = project.Name;
-            existingProject.CustomerCompanyName = project.CustomerCompanyName;
-            existingProject.ExecutiveCompanyName = project.ExecutiveCompanyName;
-            existingProject.StartDate = project.StartDate;
-            existingProject.EndDate = project.EndDate;
-            await _dbContext.SaveChangesAsync();
-            return RedirectToAction("Index");
+            _logger.LogError(exception, "An error occured while trying to add project");
+            return RedirectToAction(nameof(HomeController.Error), "Home");
         }
-
-        return View(project);
-    }
-
-    public async Task<IActionResult> Details(int id, CancellationToken cancellationToken)
-    {
-        var detailsProject = await _dbContext.Projects.Include(x => x.Employees).FirstOrDefaultAsync(p => p.Id == id);
-        return View(detailsProject);
     }
 
     [HttpGet("{id:int}")]
+    public async Task<ActionResult> Edit(int id, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var project = await _projectService.GetByIdAsync(id, cancellationToken);
+            var viewModel = new EditProjectViewModel
+            {
+                Project = project,
+            };
+            return View(viewModel);
+        }
+        catch (EmployeeNotFoundException)
+        {
+            _logger.LogWarning("Tried to get not-exiting employee {EmployeeId}", id);
+            return RedirectToAction(nameof(Index));
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "An error occured while trying to get a page to edit employee {EmployeeId}",
+                id);
+            return RedirectToAction(nameof(HomeController.Error), "Home");
+        }
+    }
+
+
+    [HttpPost("{id:int}")]
+    public async Task<ActionResult> Edit(int id, EditProjectDto editEmployeeDto, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var updateProjectDto = _mapper.Map<UpdateProjectDto>(editEmployeeDto);
+            await _projectService.UpdateAsync(id, updateProjectDto, cancellationToken);
+
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        catch (ProjectNotFoundException)
+        {
+            _logger.LogWarning("Tried to get not-existing project {ProjectId}", id);
+            return RedirectToAction(nameof(Index));
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Error occurred while trying to update project {ProjectId}", id);
+            return RedirectToAction(nameof(HomeController.Error), "Home");
+        }
+    }
+
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> Details(int id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var project = await _projectService.GetByIdAsync(id, cancellationToken);
+            var viewModel = new ProjectDetailsViewModel()
+            {
+                Project = project,
+            };
+            return View(viewModel);
+        }
+        catch (ProjectNotFoundException)
+        {
+            _logger.LogWarning("Tried to get not-existing project {ProjectId}", id);
+            return RedirectToAction(nameof(Index));
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "An error occured while trying get the project {ProjectId} details", id);
+            return RedirectToAction(nameof(HomeController.Error), "Home");
+        }
+    }
+
+    [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
-        var project = await _dbContext.Projects.FirstOrDefaultAsync(x => x.Id == id);
-        if (project != null) _dbContext.Projects.Remove(project);
-        await _dbContext.SaveChangesAsync();
-        return RedirectToAction("Index");
+        try
+        {
+            await _projectService.DeleteAsync(id, cancellationToken);
+            _logger.LogInformation("User {UserId} has been deleted", id);
+            return Ok();
+        }
+        catch (ProjectNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "An error occured while trying to delete a project");
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
     }
 }

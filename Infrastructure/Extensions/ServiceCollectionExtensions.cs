@@ -22,6 +22,7 @@ public static class ServiceCollectionExtensions
             .AddEntityFrameworkStores<ApplicationDbContext>();
 
         services.AddScoped<IEmployeeService, EmployeeService>();
+        services.AddScoped<IProjectService, ProjectService>();
         services.AddLogging();
 
         return services;
