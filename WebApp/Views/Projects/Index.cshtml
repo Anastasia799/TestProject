@@ -1,0 +1,30 @@
+﻿@model List<Domain.Entities.Project>
+
+@{
+    ViewData["Title"] = "Projects list";
+    Layout = "_Layout";
+}
+
+<table class="table">
+    <thead>
+    <tr>
+        <th scope="col">#</th>
+        <th scope="col">Project</th>
+        <th scope="col">Project ProjectManager</th>
+        <th scope="col">Priority</th>
+    </tr>
+    </thead>
+    <tbody>
+    @for (var i = 0; i < Model.Count; i++)
+    {
+        var project = Model[i];
+
+        <tr>
+            <td>@(i + 1)</td>
+            <td>@project.Name</td>
+            <td>@project.ProjectManager</td>
+            <td>@project.Priority</td>
+        </tr>
+    }
+    </tbody>
+</table>

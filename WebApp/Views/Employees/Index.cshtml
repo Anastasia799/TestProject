@@ -1,0 +1,35 @@
+﻿@model TestProject.ViewModels.Employees.EmployeeIndexViewModel
+
+@{
+    ViewData["Title"] = "Employees list";
+    Layout = "_Layout";
+    var employees = Model.Employees;
+}
+
+<a asp-action="Add" class="btn btn-primary">Add new</a>
+<table class="table">
+    <thead>
+    <tr>
+        <th scope="col">Id</th>
+        <th scope="col">First name</th>
+        <th scope="col">Last name</th>
+        <th scope="col">Email</th>
+    </tr>
+    </thead>
+    <tbody>
+    @for (var i = 0; i < employees.Count; i++)
+    {
+        var employee = employees[i];
+        <tr>
+            <td>@(i + 1)</td>
+            <td>
+                <a asp-controller="Employees" asp-action="Details" asp-route-id="@employee.Id">
+                    @employee.FirstName
+                </a>
+            </td>
+            <td>@employee.LastName</td>
+            <td>@employee.Email</td>
+        </tr>
+    }
+    </tbody>
+</table>
