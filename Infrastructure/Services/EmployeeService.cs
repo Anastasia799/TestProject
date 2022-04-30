@@ -27,6 +27,7 @@ public class EmployeeService : IEmployeeService
         var employee = await _dbContext.Employees
             .AsNoTracking()
             .Include(x => x.Projects)
+            .ThenInclude(x => x.Project)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (employee is null)
@@ -43,7 +44,7 @@ public class EmployeeService : IEmployeeService
         employee.Email = updateEmployeeDto.Email;
         employee.FirstName = updateEmployeeDto.FirstName;
         employee.LastName = updateEmployeeDto.LastName;
-        employee.LastName = updateEmployeeDto.MiddleName;
+        employee.MiddleName = updateEmployeeDto.MiddleName;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
     }

@@ -2,7 +2,7 @@
 
 @{
     var employee = Model.Employee;
-    ViewData["Title"] = $"Employee {employee.FirstName} {employee.LastName} details";
+    ViewData["Title"] = $"Employee {employee.FullName()} details";
     Layout = "_Layout";
 }
 
@@ -17,10 +17,12 @@
         <hr/>
         @if (Model.EmployeeHasProjects)
         {
-            @foreach (var project in employee.Projects)
-            {
-                <p>Описание: <b>@project.Project.Name</b></p>
-            }
+            <ul>Projects:
+                @foreach (var project in employee.Projects)
+                {
+                    <li>@project.Project.Name</li>                
+                }
+                </ul>
         }
 
     </div>

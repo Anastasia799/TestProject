@@ -2,7 +2,7 @@
 
 namespace TestProject.ViewModels.Projects;
 
-public class AddProjectDto
+public class AddProjectForm
 {
     [Required] [MaxLength(50)] public string Name { get; set; }
 

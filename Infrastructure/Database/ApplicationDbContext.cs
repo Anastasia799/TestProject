@@ -16,7 +16,6 @@ public class ApplicationDbContext : IdentityDbContext
 
     public DbSet<Employee> Employees { get; set; }
     public DbSet<Project> Projects { get; set; }
-    public DbSet<TaskModel> Tasks { get; set; }
     public DbSet<ProjectEmployee> ProjectEmployees { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

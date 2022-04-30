@@ -3,7 +3,6 @@ using Application.Exceptions;
 using Application.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using TestProject.Validators.Employees;
 using TestProject.ViewModels.Employees;
 
 namespace TestProject.Controllers;

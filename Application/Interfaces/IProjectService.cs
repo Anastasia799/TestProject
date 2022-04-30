@@ -1,11 +1,12 @@
 ﻿using Application.Dtos.Project;
 using Domain.Entities;
+using Domain.Enums;
 
 namespace Application.Interfaces;
 
 public interface IProjectService
 {
-    Task<List<Project>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<List<Project>> GetAsync(ProjectFilterDto? projectFilterDto, SortProjectEnum? sortOrder, CancellationToken cancellationToken = default);
     Task<Project> GetByIdAsync(int id, CancellationToken cancellationToken = default);
     Task UpdateAsync(int id, UpdateProjectDto project, CancellationToken cancellationToken = default);
     Task DeleteAsync(int id, CancellationToken cancellationToken = default);

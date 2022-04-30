@@ -2,6 +2,7 @@
 using Application.Exceptions;
 using Application.Interfaces;
 using AutoMapper;
+using Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using TestProject.ViewModels.Projects;
@@ -28,11 +29,14 @@ public class ProjectsController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public async Task<IActionResult> Index([FromQuery] ProjectFilterDto filter,
+        SortProjectEnum? sortBy,
+        CancellationToken cancellationToken)
     {
         try
         {
-            var projects = await _projectService.GetAllAsync(cancellationToken);
+            var projects = await _projectService.GetAsync(filter, sortBy, cancellationToken);
+
             var viewModel = new ProjectIndexViewModel
             {
                 Projects = projects
@@ -43,7 +47,7 @@ public class ProjectsController : Controller
         catch (Exception exception)
         {
             _logger.LogError(exception, "An error occured while trying to get all projects");
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            return RedirectToAction(nameof(HomeController.Error), "Home");
         }
     }
 
@@ -61,11 +65,11 @@ public class ProjectsController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Add(AddProjectDto? addProjectDto, CancellationToken cancellationToken)
+    public async Task<IActionResult> Add(AddProjectForm? addProjectForm, CancellationToken cancellationToken)
     {
         try
         {
-            if (addProjectDto is null)
+            if (addProjectForm is null)
                 return RedirectToAction(nameof(Index));
 
             if (!ModelState.IsValid)
@@ -80,7 +84,7 @@ public class ProjectsController : Controller
                 return View(viewModel);
             }
 
-            var createProjectDto = _mapper.Map<CreateProjectDto>(addProjectDto);
+            var createProjectDto = _mapper.Map<CreateProjectDto>(addProjectForm);
             var newProjectId = await _projectService.CreateAsync(createProjectDto, cancellationToken);
 
             return RedirectToAction("Details", new { Id = newProjectId });
@@ -98,20 +102,31 @@ public class ProjectsController : Controller
         try
         {
             var project = await _projectService.GetByIdAsync(id, cancellationToken);
-            var viewModel = new EditProjectViewModel
+            var viewModel = new EditProjectForm()
             {
-                Project = project,
+                Name = project.Name,
+                Priority = project.Priority,
+                StartDate = project.StartDate,
+                EndDate = project.EndDate,
+                CustomerCompanyName = project.CustomerCompanyName,
+                ExecutiveCompanyName = project.ExecutiveCompanyName
             };
             return View(viewModel);
+            //var project = await _projectService.GetByIdAsync(id, cancellationToken);
+            // var viewModel = new EditProjectViewModel
+            // {
+            //     Project = project,
+            // };
+            // return View(viewModel);
         }
-        catch (EmployeeNotFoundException)
+        catch (ProjectNotFoundException)
         {
-            _logger.LogWarning("Tried to get not-exiting employee {EmployeeId}", id);
+            _logger.LogWarning("Tried to get not-exiting employee {ProjectId}", id);
             return RedirectToAction(nameof(Index));
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "An error occured while trying to get a page to edit employee {EmployeeId}",
+            _logger.LogError(exception, "An error occured while trying to get a page to edit employee {ProjectId}",
                 id);
             return RedirectToAction(nameof(HomeController.Error), "Home");
         }
@@ -119,11 +134,11 @@ public class ProjectsController : Controller
 
 
     [HttpPost("{id:int}")]
-    public async Task<ActionResult> Edit(int id, EditProjectDto editEmployeeDto, CancellationToken cancellationToken)
+    public async Task<ActionResult> Edit(int id, EditProjectForm editEmployeeForm, CancellationToken cancellationToken)
     {
         try
         {
-            var updateProjectDto = _mapper.Map<UpdateProjectDto>(editEmployeeDto);
+            var updateProjectDto = _mapper.Map<UpdateProjectDto>(editEmployeeForm);
             await _projectService.UpdateAsync(id, updateProjectDto, cancellationToken);
 
             return RedirectToAction(nameof(Details), new { id });
@@ -170,7 +185,7 @@ public class ProjectsController : Controller
         try
         {
             await _projectService.DeleteAsync(id, cancellationToken);
-            _logger.LogInformation("User {UserId} has been deleted", id);
+            _logger.LogInformation("Project {ProjectId} has been deleted", id);
             return Ok();
         }
         catch (ProjectNotFoundException)

@@ -5,14 +5,69 @@
     Layout = "_Layout";
     var projects = Model.Projects;
 }
+<form method="get">
+    <div class="form-inline form-group mt-4">
+        <label class="control-label">Name: </label>
+        <input type="text" asp-for="@Model.Filter.Name" class="form-control">
 
-<a asp-action="Add" class="btn btn-primary">Add new</a>
+        <label class="control-label">Priority: </label>
+        <select class="form-select" asp-for="@Model.Filter.Priority">
+            <option value="">Select priority</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+        </select>
+        <label class="control-label">Date From: </label>
+        <input type="date" asp-for="@Model.Filter.StartDate" class="form-control">
+
+        <label class="control-label">Date To: </label>
+        <input type="date" asp-for="@Model.Filter.EndDate" class="form-control">
+
+        <button type="submit" class="btn btn-sm mt-3 btn-dark">Filter</button>
+        <a asp-action="Index" type="submit" class="btn btn-sm mt-3 btn-danger">Reset</a>
+    </div>
+</form>
+
+<div>
+    @{
+        var queryString = Context.Request.QueryString.Value;
+        if (queryString is not null)
+        {
+            if (queryString.Contains("sortBy=NameDesc"))
+            {
+                <a href="/Projects/Index?sortBy=NameAsc">Sort by name</a>
+            }
+            else
+            {
+                <a href="/Projects/Index?sortBy=NameDesc">Sort by name</a>
+            }
+            
+            if (queryString.Contains("sortBy=PriorityAsc"))
+            {
+                <a href="/Projects/Index?sortBy=PriorityDesc">Sort by priority</a>
+            }
+            else
+            {
+                <a href="/Projects/Index?sortBy=PriorityAsc">Sort by priority</a>
+            }
+        }
+    }
+</div>
+
+
+
+
+<a asp-action="Add" class="btn btn-primary my-3">Add new</a>
 <table class="table">
     <thead>
     <tr>
         <th scope="col">#</th>
-        <th scope="col">Project</th>
-        <th scope="col">Project ProjectManager</th>
+        <th scope="col">
+            <a asp-action="Index" asp-route-sortOrder="@ViewBag.NameSort">Project</a>
+        </th>
+        <th scope="col">Project Manager</th>
         <th scope="col">Priority</th>
     </tr>
     </thead>
@@ -23,8 +78,12 @@
 
         <tr>
             <td>@(i + 1)</td>
-            <td>@project.Name</td>
-            <td>@project.ProjectManager</td>
+            <td>
+                <a asp-controller="Projects" asp-action="Details" asp-route-id="@project.Id">
+                    @project.Name
+                </a>
+            </td>
+            <td>@project.ProjectManager.FullName()</td>
             <td>@project.Priority</td>
         </tr>
     }

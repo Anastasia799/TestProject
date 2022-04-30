@@ -13,7 +13,7 @@ public class AutoMapperProfile : Profile
         CreateMap<AddEmployeeDto, CreateEmployeeDto>();
         CreateMap<EditEmployeeDto, UpdateEmployeeDto>();
 
-        CreateMap<AddProjectDto, CreateProjectDto>();
-        CreateMap<EditProjectDto, UpdateProjectDto>();
+        CreateMap<AddProjectForm, CreateProjectDto>();
+        CreateMap<EditProjectForm, UpdateProjectDto>();
     }
 }

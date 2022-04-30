@@ -2,7 +2,9 @@
 using Application.Exceptions;
 using Application.Interfaces;
 using Domain.Entities;
+using Domain.Enums;
 using Infrastructure.Database;
+using LinqKit;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Services;
@@ -16,10 +18,31 @@ public class ProjectService : IProjectService
         _dbContext = dbContext;
     }
 
-    public async Task<List<Project>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<List<Project>> GetAsync(ProjectFilterDto? projectFilterDto,
+        SortProjectEnum? sortOrder,
+        CancellationToken cancellationToken = default)
     {
-        var list = await _dbContext.Projects.ToListAsync(cancellationToken);
-        return list;
+        var filter = CreateFilter(projectFilterDto);
+        var query = _dbContext.Projects
+            .AsNoTracking()
+            .Include(x => x.ProjectManager)
+            .Where(filter);
+
+        if (sortOrder.HasValue)
+        {
+            query = sortOrder switch
+            {
+                SortProjectEnum.NameDesc => query.OrderByDescending(x => x.Name),
+                SortProjectEnum.NameAsc => query.OrderBy(x => x.Name),
+                SortProjectEnum.PriorityDesc => query.OrderByDescending(x => x.Priority),
+                SortProjectEnum.PriorityAsc => query.OrderBy(x => x.Priority),
+                _ => query,
+            };    
+        }
+
+        var result = await query.ToListAsync(cancellationToken);
+
+        return result;
     }
 
     public async Task<Project> GetByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -27,6 +50,8 @@ public class ProjectService : IProjectService
         var project = await _dbContext.Projects
             .AsNoTracking()
             .Include(x => x.Employees)
+            .ThenInclude(x => x.Employee)
+            .Include(x => x.ProjectManager)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (project is null)
@@ -45,7 +70,6 @@ public class ProjectService : IProjectService
         project.Priority = updateProjectDto.Priority;
         project.StartDate = updateProjectDto.StartDate;
         project.EndDate = updateProjectDto.EndDate;
-        project.ProjectManagerId = updateProjectDto.ProjectManagerId;
         project.CustomerCompanyName = updateProjectDto.CustomerCompanyName;
         project.ExecutiveCompanyName = updateProjectDto.ExecutiveCompanyName;
 
@@ -80,5 +104,33 @@ public class ProjectService : IProjectService
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return project.Id;
+    }
+
+    private static ExpressionStarter<Project> CreateFilter(ProjectFilterDto? projectFilterDto)
+    {
+        var filter = PredicateBuilder.New<Project>(true);
+        if (projectFilterDto is null)
+            return filter;
+        if (projectFilterDto.ShouldFilterByName())
+        {
+            filter = filter.And(x => x.Name.Contains(projectFilterDto.Name));
+        }
+
+        if (projectFilterDto.StartDate.HasValue)
+        {
+            filter = filter.And(x => x.StartDate >= projectFilterDto.StartDate);
+        }
+
+        if (projectFilterDto.EndDate.HasValue)
+        {
+            filter = filter.And(x => x.EndDate <= projectFilterDto.EndDate);
+        }
+
+        if (projectFilterDto.Priority.HasValue)
+        {
+            filter = filter.And(x => x.Priority == projectFilterDto.Priority);
+        }
+
+        return filter;
     }
 }

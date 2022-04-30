@@ -15,7 +15,7 @@ builder.Host.ConfigureLogging(logging =>
 
 var services = builder.Services;
 services.AddInfrastructure(builder.Configuration);
-services.AddControllersWithViews().AddRazorRuntimeCompilation();;
+services.AddControllersWithViews().AddRazorRuntimeCompilation();
 
 services.AddAutoMapper(configuration => { configuration.AddProfile<AutoMapperProfile>(); });
 

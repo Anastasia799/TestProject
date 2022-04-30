@@ -4,7 +4,7 @@ namespace TestProject.ViewModels.Projects;
 
 public class AddProjectViewModel
 {
-    public AddProjectDto AddProjectDto { get; set; }
+    public AddProjectForm AddProjectForm { get; set; }
     
     public List<SelectListItem> EmployeesListItems { get; set; }
 }

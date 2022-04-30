@@ -1,5 +1,4 @@
-﻿@using System.Collections.Specialized
-@model TestProject.ViewModels.Projects.AddProjectViewModel
+﻿@model TestProject.ViewModels.Projects.AddProjectViewModel
 
 @{
     ViewData["Title"] = "Add new project";
@@ -9,39 +8,39 @@
 <form asp-controller="Projects" asp-action="Add" style="width: 50%;margin: 0 auto;">
     <div class="form-group">
         <label>Project name</label>
-        <input type="text" asp-for="AddProjectDto.Name" class="form-control">
-        <span asp-validation-for="AddProjectDto.Name" class="text-danger"></span>
+        <input type="text" asp-for="AddProjectForm.Name" class="form-control">
+        <span asp-validation-for="AddProjectForm.Name" class="text-danger"></span>
     </div>
     <div class="form-group">
         <label>Customer Company Name</label>
-        <input type="text" asp-for="AddProjectDto.CustomerCompanyName" class="form-control">
-        <span asp-validation-for="AddProjectDto.CustomerCompanyName" class="text-danger"></span>
+        <input type="text" asp-for="AddProjectForm.CustomerCompanyName" class="form-control">
+        <span asp-validation-for="AddProjectForm.CustomerCompanyName" class="text-danger"></span>
     </div>
     <div class="form-group">
         <label>Executive Company Name</label>
-        <input type="text" asp-for="AddProjectDto.ExecutiveCompanyName" class="form-control">
-        <span asp-validation-for="AddProjectDto.ExecutiveCompanyName" class="text-danger"></span>
+        <input type="text" asp-for="AddProjectForm.ExecutiveCompanyName" class="form-control">
+        <span asp-validation-for="AddProjectForm.ExecutiveCompanyName" class="text-danger"></span>
     </div>
     <div class="form-group">
         <label>Project Manager</label>
-        <select class="form-select" asp-for="AddProjectDto.ProjectManagerId" asp-items="Model.EmployeesListItems"></select>
+        <select class="form-select" asp-for="AddProjectForm.ProjectManagerId" asp-items="Model.EmployeesListItems"></select>
     </div>
     <div class="form-group">
         <label>Employees</label>
-        <select class="form-select" id="employee-ids-select-list" multiple="multiple" asp-for="AddProjectDto.EmployeesIds" asp-items="Model.EmployeesListItems"></select>
+        <select class="form-select" id="employee-ids-select-list" multiple="multiple" asp-for="AddProjectForm.EmployeesIds" asp-items="Model.EmployeesListItems"></select>
     </div>
     <div class="form-group">
         <label>Date Start</label>
-        <input type="date" asp-for="AddProjectDto.StartDate" class="form-control">
+        <input type="date" asp-for="AddProjectForm.StartDate" class="form-control">
     </div>
     <div class="form-group">
         <label>Date End</label>
-        <input type="date" asp-for="AddProjectDto.EndDate" class="form-control">
+        <input type="date" asp-for="AddProjectForm.EndDate" class="form-control">
     </div>
     <div class="form-group">
         <label>Priority</label>
     </div>
-    <select class="form-select" asp-for="AddProjectDto.Priority">
+    <select class="form-select" asp-for="AddProjectForm.Priority">
         <option value="">Select priority</option>
         <option value="1">1</option>
         <option value="2">2</option>
@@ -62,4 +61,3 @@
         });
     </script>
 }
- 
